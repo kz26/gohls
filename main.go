@@ -1,9 +1,27 @@
+/*
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+*/
+
 package main
 
 import "flag"
 import "fmt"
 import "io"
 import "net/http"
+import "net/url"
 import "log"
 import "os"
 import "time"
@@ -12,7 +30,11 @@ import "github.com/grafov/m3u8"
 
 const VERSION = "1.0.0"
 
-const USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0"
+const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0"
+
+var USER_AGENT string
+
+var client = &http.Client{}
 
 func doRequest(c *http.Client, req *http.Request) (*http.Response, error) {
 	req.Header.Set("User-Agent", USER_AGENT)
@@ -20,15 +42,14 @@ func doRequest(c *http.Client, req *http.Request) (*http.Response, error) {
 	return resp, err
 }
 
-func downloadSegment(fn string, feed chan m3u8.MediaSegment) {
+func downloadSegment(fn string, feed chan string) {
 	out, err := os.Create(fn)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer out.Close()
-	client := &http.Client{}
 	for v := range feed {
-		req, err := http.NewRequest("GET", v.URI, nil)
+		req, err := http.NewRequest("GET", v, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -42,17 +63,20 @@ func downloadSegment(fn string, feed chan m3u8.MediaSegment) {
 			log.Fatal(err)
 		}
 		resp.Body.Close()
-		log.Printf("Downloaded %v\n", v.URI)
+		log.Printf("Downloaded %v\n", v)
 	}
 }
 
-func getPlaylist(url string, duration time.Duration, useLocalTime bool, feed chan m3u8.MediaSegment) {
+func getPlaylist(urlStr string, duration time.Duration, useLocalTime bool, feed chan string) {
 	startTime := time.Now()
 	var recTime time.Duration
 	cache := lru.New(64)
-	client := &http.Client{}
+	playlistUrl, err := url.Parse(urlStr)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for {
-		req, err := http.NewRequest("GET", url, nil)
+		req, err := http.NewRequest("GET", urlStr, nil)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -70,11 +94,16 @@ func getPlaylist(url string, duration time.Duration, useLocalTime bool, feed cha
 			mpl := playlist.(*m3u8.MediaPlaylist)
 			for _, v := range mpl.Segments {
 				if v != nil {
-					_, hit := cache.Get(v.URI)
+					msURI, err := playlistUrl.Parse(v.URI)
+					if err != nil {
+						log.Print(err)
+						continue
+					}
+					_, hit := cache.Get(msURI)
 					if !hit {
-						feed <- *v
-						cache.Add(v.URI, nil)
-						log.Printf("Queued %v\n", v.URI)
+						feed <- msURI.String()
+						cache.Add(msURI, nil)
+						log.Printf("Queued %v\n", msURI)
 						if useLocalTime {
 							recTime = time.Now().Sub(startTime)
 						} else {
@@ -104,18 +133,19 @@ func main() {
 
 	duration := flag.Duration("t", time.Duration(0), "Recording duration (0 == infinite)")
 	useLocalTime := flag.Bool("l", false, "Use local time to track duration instead of supplied metadata")
+	flag.StringVar(&USER_AGENT, "ua", DEFAULT_USER_AGENT, "User-Agent for HTTP client")
 	flag.Parse()
 
 	os.Stderr.Write([]byte(fmt.Sprintf("gohls %v - HTTP Live Streaming (HLS) downloader\n", VERSION)))
 	os.Stderr.Write([]byte("Copyright (C) 2013 Kevin Zhang. Licensed for use under the GNU GPL version 3.\n"))
 
 	if flag.NArg() < 2 {
-		os.Stderr.Write([]byte("Usage: gohls [-t duration] [-l=bool] media-playlist-url output-file\n"))
+		os.Stderr.Write([]byte("Usage: gohls [-l=bool] [-t duration] [-ua user-agent] media-playlist-url output-file\n"))
 		flag.PrintDefaults()
 		os.Exit(2)
 	}
 
-	msChan := make(chan m3u8.MediaSegment, 64)
+	msChan := make(chan string, 1024)
 	go getPlaylist(flag.Arg(0), *duration, *useLocalTime, msChan)
 	downloadSegment(flag.Arg(1), msChan)
 }
