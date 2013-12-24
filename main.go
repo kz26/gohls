@@ -28,7 +28,7 @@ import "time"
 import "lru" // https://github.com/golang/groupcache/blob/master/lru/lru.go
 import "github.com/grafov/m3u8"
 
-const VERSION = "1.0.0"
+const VERSION = "1.0.1"
 
 const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0"
 
@@ -99,10 +99,10 @@ func getPlaylist(urlStr string, duration time.Duration, useLocalTime bool, feed 
 						log.Print(err)
 						continue
 					}
-					_, hit := cache.Get(msURI)
+					_, hit := cache.Get(msURI.String())
 					if !hit {
 						feed <- msURI.String()
-						cache.Add(msURI, nil)
+						cache.Add(msURI.String(), nil)
 						log.Printf("Queued %v\n", msURI)
 						if useLocalTime {
 							recTime = time.Now().Sub(startTime)
@@ -121,7 +121,7 @@ func getPlaylist(urlStr string, duration time.Duration, useLocalTime bool, feed 
 					close(feed)
 					return
 			} else {
-				time.Sleep(time.Duration(int(mpl.TargetDuration)) * time.Second)
+				time.Sleep(time.Duration(int64(mpl.TargetDuration * 1000000000)))
 			}
 		} else {
 			log.Fatal("Not a valid media playlist")
