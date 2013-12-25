@@ -26,7 +26,7 @@ import "log"
 import "os"
 import "time"
 import "lru" // https://github.com/golang/groupcache/blob/master/lru/lru.go
-import "regexp"
+import "strings"
 import "github.com/grafov/m3u8"
 
 const VERSION = "1.0.2beta"
@@ -96,8 +96,7 @@ func getPlaylist(urlStr string, duration time.Duration, useLocalTime bool, feed 
 			for _, v := range mpl.Segments {
 				if v != nil {
 					var msURI string
-					matched, _ := regexp.Match("^http", []byte(v.URI))
-					if matched {
+					if strings.HasPrefix(v.URI, "http") {
 						msURI = v.URI
 					} else {
 						msUrl, err := playlistUrl.Parse(v.URI)
