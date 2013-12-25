@@ -29,9 +29,7 @@ import "lru" // https://github.com/golang/groupcache/blob/master/lru/lru.go
 import "strings"
 import "github.com/grafov/m3u8"
 
-const VERSION = "1.0.2beta"
-
-const DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:26.0) Gecko/20100101 Firefox/26.0"
+const VERSION = "1.0.2"
 
 var USER_AGENT string
 
@@ -140,7 +138,7 @@ func main() {
 
 	duration := flag.Duration("t", time.Duration(0), "Recording duration (0 == infinite)")
 	useLocalTime := flag.Bool("l", false, "Use local time to track duration instead of supplied metadata")
-	flag.StringVar(&USER_AGENT, "ua", DEFAULT_USER_AGENT, "User-Agent for HTTP client")
+	flag.StringVar(&USER_AGENT, "ua", fmt.Sprintf("gohls/%v", VERSION), "User-Agent for HTTP client")
 	flag.Parse()
 
 	os.Stderr.Write([]byte(fmt.Sprintf("gohls %v - HTTP Live Streaming (HLS) downloader\n", VERSION)))
