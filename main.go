@@ -29,7 +29,7 @@ import "lru" // https://github.com/golang/groupcache/blob/master/lru/lru.go
 import "strings"
 import "github.com/grafov/m3u8"
 
-const VERSION = "1.0.3"
+const VERSION = "1.0.4"
 
 var USER_AGENT string
 
@@ -60,6 +60,10 @@ func downloadSegment(fn string, dlc chan *Download, recTime time.Duration) {
 		resp, err := doRequest(client, req)
 		if err != nil {
 			log.Print(err)
+			continue
+		}
+		if resp.StatusCode != 200 {
+			log.Printf("Received HTTP %v for %v\n", resp.StatusCode, v.URI)
 			continue
 		}
 		_, err = io.Copy(out, resp.Body)

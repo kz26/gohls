@@ -1,3 +1,7 @@
+1.0.4 - 12/30/2013
+
+* Handle non-200 HTTP responses in downloadSegment()
+
 1.0.3 - 12/25/2013
 
 * Improve logging
