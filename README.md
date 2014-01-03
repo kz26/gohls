@@ -13,6 +13,7 @@ Download the source distribution for a tagged stable release, or download binari
 Currently, binaries are available for the following platforms:
 
 * Windows 64-bit
+* Mac OS X 64-bit (contributed by @nlittlejohns, compiled and tested on OS X 10.9)
 
 ## Usage, options, and defaults
 
