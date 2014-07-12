@@ -25,7 +25,7 @@ import "net/url"
 import "log"
 import "os"
 import "time"
-import "lru" // https://github.com/golang/groupcache/blob/master/lru/lru.go
+import "github.com/golang/groupcache/lru"
 import "strings"
 import "github.com/grafov/m3u8"
 
