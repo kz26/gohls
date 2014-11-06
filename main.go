@@ -27,9 +27,9 @@ import "os"
 import "time"
 import "github.com/golang/groupcache/lru"
 import "strings"
-import "github.com/grafov/m3u8"
+import "github.com/kz26/m3u8"
 
-const VERSION = "1.0.4"
+const VERSION = "1.0.5"
 
 var USER_AGENT string
 
@@ -72,14 +72,18 @@ func downloadSegment(fn string, dlc chan *Download, recTime time.Duration) {
 		}
 		resp.Body.Close()
 		log.Printf("Downloaded %v\n", v.URI)
-		log.Printf("Recorded %v of %v\n", v.totalDuration, recTime)
+		if recTime != 0 {
+			log.Printf("Recorded %v of %v\n", v.totalDuration, recTime)
+			} else {
+				log.Printf("Recorded %v\n", v.totalDuration)
+			}
 	}
 }
 
 func getPlaylist(urlStr string, recTime time.Duration, useLocalTime bool, dlc chan *Download) {
 	startTime := time.Now()
 	var recDuration time.Duration = 0
-	cache := lru.New(64)
+	cache := lru.New(1024)
 	playlistUrl, err := url.Parse(urlStr)
 	if err != nil {
 		log.Fatal(err)
@@ -130,7 +134,7 @@ func getPlaylist(urlStr string, recTime time.Duration, useLocalTime bool, dlc ch
 						}
 						dlc <- &Download{msURI, recDuration}
 					}
-					if recDuration != 0 && recDuration >= recTime {
+					if recTime != 0 && recDuration != 0 && recDuration >= recTime {
 						close(dlc)
 						return
 					}
@@ -156,7 +160,7 @@ func main() {
 	flag.Parse()
 
 	os.Stderr.Write([]byte(fmt.Sprintf("gohls %v - HTTP Live Streaming (HLS) downloader\n", VERSION)))
-	os.Stderr.Write([]byte("Copyright (C) 2013 Kevin Zhang. Licensed for use under the GNU GPL version 3.\n"))
+	os.Stderr.Write([]byte("Copyright (C) 2013-2014 Kevin Zhang. Licensed for use under the GNU GPL version 3.\n"))
 
 	if flag.NArg() < 2 {
 		os.Stderr.Write([]byte("Usage: gohls [-l=bool] [-t duration] [-ua user-agent] media-playlist-url output-file\n"))

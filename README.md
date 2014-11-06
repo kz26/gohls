@@ -3,7 +3,7 @@
 gohls - HTTP Live Streaming (HLS) downloader written in Golang
 
 
-* Current version: **1.0.4**
+* Current version: **1.0.5**
 * Author: Kevin Zhang
 * License: [GNU GPL version 3](http://www.gnu.org/licenses/gpl-3.0.txt)
 
