@@ -3,8 +3,8 @@
 gohls - HTTP Live Streaming (HLS) downloader written in Golang
 
 
-* Current version: **1.0.5**
-* Author: Kevin Zhang
+* Current version: **1.0.6**
+* Authors: Kevin Zhang, Bogdan S.
 * License: [GNU GPL version 3](http://www.gnu.org/licenses/gpl-3.0.txt)
 
 ## [Download (source and binaries)](https://github.com/kz26/gohls/releases)
@@ -27,5 +27,4 @@ The recording duration should be specified as a Go-compatible [duration string](
 
 ## TODO
 
-* Encrypted streams support?
-* Proper Ctrl-C handling
+* Graceful Ctrl-C / Ctrl-D exit ( or q button )
