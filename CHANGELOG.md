@@ -1,3 +1,6 @@
+1.0.6 - 26/05/2015
+* Process AES-128 encrypted streams
+
 1.0.5 - 11/06/2014
 * Fix premature termination when downloading VOD streams with t=0
 * Hide total recording time in log output when t=0
