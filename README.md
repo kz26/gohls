@@ -3,7 +3,7 @@
 gohls - HTTP Live Streaming (HLS) downloader written in Golang
 * Current version: **1.0.6**
 
-## [Fork changes:](https://github.com/kz26/gohls/releases)
+## [Fork changes:](https://github.com/kz26/gohls/)
 
 * Encrypted streams support
 
